@@ -1,0 +1,34 @@
+{
+  "name": "julinho-api",
+  "version": "1.0.0",
+  "description": "API separada para dashboard do Julinho - expõe dados de analytics em JSON",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "api",
+    "analytics",
+    "dashboard",
+    "julinho"
+  ],
+  "author": "Fabio Farias Figueiroa",
+  "license": "ISC",
+  "dependencies": {
+    "basic-auth": "^2.0.1",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "helmet": "^7.0.0",
+    "pg": "^8.11.3",
+    "redis": "^5.8.2",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}

@@ -6,6 +6,12 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
+    "docker:build": "docker build -t julinho-api .",
+    "docker:run": "docker run -p 4000:4000 --env-file .env julinho-api",
+    "docker:compose": "docker-compose up -d",
+    "docker:compose:logs": "docker-compose logs -f",
+    "docker:compose:down": "docker-compose down",
+    "health-check": "curl -f http://localhost:4000/health || exit 1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -30,5 +36,9 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   }
 }

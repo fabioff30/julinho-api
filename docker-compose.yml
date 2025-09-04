@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  julinho-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - DB_HOST=147.93.15.49
+      - DB_PORT=3001
+      - DB_NAME=julinho-ia
+      - DB_USER=postgres
+      - DB_PASSWORD=Ifabio3740%
+      - REDIS_HOST=147.93.15.49
+      - REDIS_PORT=3002
+      - REDIS_PASSWORD=Ifabio3740%
+      - DASHBOARD_SECRET=a1b2c3
+      - RATE_LIMIT_WINDOW_MS=60000
+      - RATE_LIMIT_MAX_REQUESTS=100
+      - LOG_LEVEL=info
+      - LOG_MAX_SIZE=20m
+      - LOG_MAX_FILES=5d
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "const http = require('http'); const options = { host: 'localhost', port: 4000, path: '/health' }; http.get(options, (res) => { if (res.statusCode === 200) process.exit(0); else process.exit(1); }).on('error', () => process.exit(1));"]
+      interval: 30s
+      timeout: 3s
+      start_period: 5s
+      retries: 3
+    networks:
+      - julinho-network
+
+networks:
+  julinho-network:
+    driver: bridge
+
+# Para desenvolvimento local com databases locais (opcional)
+# Descomente as seções abaixo se quiser rodar tudo local
+
+# services:
+#   postgres:
+#     image: postgres:15-alpine
+#     environment:
+#       POSTGRES_DB: julinho-ia
+#       POSTGRES_USER: postgres
+#       POSTGRES_PASSWORD: Ifabio3740%
+#     ports:
+#       - "5432:5432"
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+#     networks:
+#       - julinho-network
+# 
+#   redis:
+#     image: redis:7-alpine
+#     command: redis-server --requirepass Ifabio3740%
+#     ports:
+#       - "6379:6379"
+#     volumes:
+#       - redis_data:/data
+#     networks:
+#       - julinho-network
+
+# volumes:
+#   postgres_data:
+#   redis_data:

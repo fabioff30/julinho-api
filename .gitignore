@@ -109,3 +109,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# WhatsApp session data (contains sensitive authentication info)
+whatsapp-session/

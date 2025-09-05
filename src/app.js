@@ -95,6 +95,7 @@ class JulinhoAPI {
 
     // Main API routes
     this.app.use('/api/reports', require('./routes/reports'));
+    this.app.use('/api/messages', require('./routes/messages'));
     
     // Legacy API routes (for backward compatibility)
     this.app.use('/api', require('./routes/analytics'));
@@ -111,13 +112,19 @@ class JulinhoAPI {
           geographic_overview: '/api/reports/geographic/overview',
           heavy_users: '/api/reports/users/heavy',
           contacts_list: '/api/reports/contacts',
+          // WhatsApp Broadcast endpoints
+          broadcast_preview: '/api/messages/broadcast/preview',
+          broadcast_send: 'POST /api/messages/broadcast',
+          whatsapp_status: '/api/messages/status',
+          whatsapp_connect: 'POST /api/messages/connect',
+          whatsapp_disconnect: 'POST /api/messages/disconnect',
           // Legacy endpoints (deprecated)
           legacy_dashboard: '/api/dashboard',
           legacy_heavy_users: '/api/heavy-users',
           legacy_contacts: '/api/contacts'
         },
         authentication: {
-          type: 'Basic Auth (for /api/reports endpoints)',
+          type: 'Basic Auth (for /api/reports and /api/messages endpoints)',
           username: 'admin',
           password: 'DASHBOARD_SECRET env variable'
         },
@@ -135,7 +142,11 @@ class JulinhoAPI {
           '/api/reports',
           '/api/reports/geographic/overview',
           '/api/reports/users/heavy',
-          '/api/reports/contacts'
+          '/api/reports/contacts',
+          '/api/messages/broadcast/preview',
+          '/api/messages/broadcast',
+          '/api/messages/status',
+          '/api/messages/connect'
         ],
         documentation: 'Visit / for complete endpoint documentation'
       });

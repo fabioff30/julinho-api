@@ -229,7 +229,7 @@ router.get('/qr', async (req, res) => {
                         <li>Escaneie o QR Code acima</li>
                     </ol>
                     <p><strong>Aguarde alguns segundos após escanear!</strong></p>
-                    <button onclick="checkStatus()" style="background: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                    <button id="checkStatusBtn" style="background: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
                         Verificar Status
                     </button>
                 </div>
@@ -266,6 +266,9 @@ router.get('/qr', async (req, res) => {
                         console.error('Error checking status:', error);
                     }
                 }
+                
+                // Add event listener to button
+                document.getElementById('checkStatusBtn').addEventListener('click', checkStatus);
                 
                 // Auto-check status every 5 seconds
                 setInterval(checkStatus, 5000);
@@ -325,8 +328,8 @@ router.get('/qr', async (req, res) => {
                     <p><strong>Conectando:</strong> ${status.is_connecting ? 'Sim' : 'Não'}</p>
                     <p><strong>Tem QR Code:</strong> ${status.has_qr_code ? 'Sim' : 'Não'}</p>
                 </div>
-                <button onclick="connect()">Conectar WhatsApp</button>
-                <button onclick="location.reload()">Atualizar</button>
+                <button id="connectBtn">Conectar WhatsApp</button>
+                <button id="refreshBtn">Atualizar</button>
             </div>
             
             <script>
@@ -347,6 +350,10 @@ router.get('/qr', async (req, res) => {
                         alert('Erro na requisição: ' + error.message);
                     }
                 }
+                
+                // Add event listeners
+                document.getElementById('connectBtn').addEventListener('click', connect);
+                document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
             </script>
         </body>
         </html>

@@ -31,6 +31,7 @@
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.0.0",
     "pg": "^8.11.3",
+    "qrcode": "^1.5.4",
     "redis": "^5.8.2",
     "whatsapp-web.js": "^1.25.0",
     "winston": "^3.11.0"

@@ -1,0 +1,4 @@
+# Trigger deployment
+# This file forces EasyPanel to detect changes and use latest commit
+# Created at: 2025-09-05T13:35:00Z
+# Latest commit should be: fbc43e15d166168ed1707bf0871880327247db7d

@@ -116,6 +116,7 @@ class JulinhoAPI {
           broadcast_preview: '/api/messages/broadcast/preview',
           broadcast_send: 'POST /api/messages/broadcast',
           whatsapp_status: '/api/messages/status',
+          whatsapp_qr_page: '/api/messages/qr',
           whatsapp_connect: 'POST /api/messages/connect',
           whatsapp_disconnect: 'POST /api/messages/disconnect',
           // Legacy endpoints (deprecated)
@@ -146,6 +147,7 @@ class JulinhoAPI {
           '/api/messages/broadcast/preview',
           '/api/messages/broadcast',
           '/api/messages/status',
+          '/api/messages/qr',
           '/api/messages/connect'
         ],
         documentation: 'Visit / for complete endpoint documentation'

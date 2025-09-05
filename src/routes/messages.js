@@ -169,4 +169,202 @@ router.post('/disconnect', async (req, res) => {
   }
 });
 
+// GET /api/messages/qr - Display QR Code in browser-friendly format
+router.get('/qr', async (req, res) => {
+  try {
+    const status = await whatsAppService.getStatus();
+    
+    if (status.qr_code) {
+      // Generate QR Code as HTML page for easy scanning
+      const qrCodeHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>WhatsApp QR Code</title>
+            <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    text-align: center; 
+                    padding: 20px;
+                    background-color: #f5f5f5;
+                }
+                .container { 
+                    max-width: 400px; 
+                    margin: 0 auto; 
+                    background: white; 
+                    padding: 30px; 
+                    border-radius: 10px; 
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                h1 { color: #25D366; margin-bottom: 20px; }
+                #qrcode { margin: 20px 0; }
+                .instructions { 
+                    color: #666; 
+                    margin-top: 20px; 
+                    line-height: 1.5;
+                }
+                .status { 
+                    background-color: #e8f5e8; 
+                    padding: 10px; 
+                    border-radius: 5px; 
+                    margin-bottom: 20px;
+                    color: #2d5a2d;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📱 WhatsApp Connection</h1>
+                <div class="status">
+                    Status: Waiting for QR Code scan...
+                </div>
+                <div id="qrcode"></div>
+                <div class="instructions">
+                    <h3>Como conectar:</h3>
+                    <ol style="text-align: left;">
+                        <li>Abra o WhatsApp no seu celular</li>
+                        <li>Vá em Menu > Dispositivos conectados</li>
+                        <li>Toque em "Conectar um dispositivo"</li>
+                        <li>Escaneie o QR Code acima</li>
+                    </ol>
+                    <p><strong>Aguarde alguns segundos após escanear!</strong></p>
+                    <button onclick="checkStatus()" style="background: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">
+                        Verificar Status
+                    </button>
+                </div>
+            </div>
+            
+            <script>
+                // Generate QR Code
+                QRCode.toCanvas(document.getElementById('qrcode'), '${status.qr_code}', {
+                    width: 256,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#FFFFFF'
+                    }
+                });
+                
+                // Check connection status
+                async function checkStatus() {
+                    try {
+                        const response = await fetch('/api/messages/status', {
+                            headers: { 'Authorization': 'Basic ' + btoa('admin:a1b2c3') }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.data.is_ready) {
+                            document.querySelector('.status').innerHTML = '✅ WhatsApp conectado com sucesso!';
+                            document.querySelector('.status').style.backgroundColor = '#d4edda';
+                            document.querySelector('.status').style.color = '#155724';
+                            document.getElementById('qrcode').innerHTML = '<h2>✅ Conectado!</h2>';
+                        } else if (!data.data.has_qr_code) {
+                            location.reload(); // Reload to get new QR code
+                        }
+                    } catch (error) {
+                        console.error('Error checking status:', error);
+                    }
+                }
+                
+                // Auto-check status every 5 seconds
+                setInterval(checkStatus, 5000);
+            </script>
+        </body>
+        </html>
+      `;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(qrCodeHtml);
+    } else {
+      const status = await whatsAppService.getStatus();
+      const statusHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>WhatsApp Status</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    text-align: center; 
+                    padding: 20px;
+                    background-color: #f5f5f5;
+                }
+                .container { 
+                    max-width: 400px; 
+                    margin: 0 auto; 
+                    background: white; 
+                    padding: 30px; 
+                    border-radius: 10px; 
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                h1 { color: #25D366; }
+                .status { padding: 20px; border-radius: 5px; margin: 20px 0; }
+                .connected { background-color: #d4edda; color: #155724; }
+                .disconnected { background-color: #f8d7da; color: #721c24; }
+                button { 
+                    background: #25D366; 
+                    color: white; 
+                    border: none; 
+                    padding: 10px 20px; 
+                    border-radius: 5px; 
+                    cursor: pointer; 
+                    margin: 5px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📱 WhatsApp Status</h1>
+                <div class="status ${status.is_ready ? 'connected' : 'disconnected'}">
+                    ${status.is_ready ? '✅ WhatsApp Conectado' : '❌ WhatsApp Desconectado'}
+                </div>
+                <div style="text-align: left;">
+                    <p><strong>Status:</strong> ${status.status_text}</p>
+                    <p><strong>Cliente existe:</strong> ${status.client_exists ? 'Sim' : 'Não'}</p>
+                    <p><strong>Conectando:</strong> ${status.is_connecting ? 'Sim' : 'Não'}</p>
+                    <p><strong>Tem QR Code:</strong> ${status.has_qr_code ? 'Sim' : 'Não'}</p>
+                </div>
+                <button onclick="connect()">Conectar WhatsApp</button>
+                <button onclick="location.reload()">Atualizar</button>
+            </div>
+            
+            <script>
+                async function connect() {
+                    try {
+                        const response = await fetch('/api/messages/connect', {
+                            method: 'POST',
+                            headers: { 'Authorization': 'Basic ' + btoa('admin:a1b2c3') }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            setTimeout(() => location.reload(), 2000);
+                        } else {
+                            alert('Erro ao conectar: ' + data.message);
+                        }
+                    } catch (error) {
+                        alert('Erro na requisição: ' + error.message);
+                    }
+                }
+            </script>
+        </body>
+        </html>
+      `;
+      
+      res.setHeader('Content-Type', 'text/html');
+      res.send(statusHtml);
+    }
+  } catch (error) {
+    logger.error('Error getting QR code:', error);
+    
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to get QR code',
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 module.exports = router;

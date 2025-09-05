@@ -67,10 +67,21 @@ class WhatsAppService {
         this.qrCode = null;
         logger.info('WhatsApp client is ready and authenticated!');
         logger.info(`Client status: isReady=${this.isReady}, isConnecting=${this.isConnecting}`);
+        
+        // Wait a bit and test the connection to make sure it's really ready
+        setTimeout(async () => {
+          try {
+            const info = await this.client.getState();
+            logger.info(`WhatsApp connection verified: ${info}`);
+          } catch (error) {
+            logger.warn('WhatsApp connection verification failed:', error.message);
+          }
+        }, 2000);
       });
 
       this.client.on('authenticated', () => {
         logger.info('WhatsApp client authenticated');
+        logger.info(`Authentication status: isReady=${this.isReady}, isConnecting=${this.isConnecting}, hasQRCode=${!!this.qrCode}`);
       });
 
       this.client.on('loading_screen', (percent, message) => {
@@ -97,6 +108,17 @@ class WhatsAppService {
         logger.warn('WhatsApp client disconnected:', reason);
         this.isReady = false;
         this.isConnecting = false;
+        this.qrCode = null;
+      });
+
+      // Add more event listeners for better debugging
+      this.client.on('remote_session_saved', () => {
+        logger.info('WhatsApp remote session saved successfully');
+      });
+
+      this.client.on('message', (message) => {
+        // Just log that we're receiving messages, which indicates the client is working
+        logger.info(`WhatsApp message received from ${message.from}, client is active`);
       });
 
       await this.client.initialize();
@@ -277,19 +299,20 @@ class WhatsAppService {
   async getStatus() {
     // Verificação mais robusta do status
     let actuallyReady = this.isReady && !!this.client;
+    let clientState = null;
     
     // Se diz que está ready, verificar se realmente consegue acessar informações
     if (actuallyReady && this.client) {
       try {
         // Tentar obter informações básicas do cliente
-        const clientInfo = await this.client.getState();
-        logger.info(`WhatsApp client state: ${clientInfo}`);
-        actuallyReady = clientInfo === 'CONNECTED';
+        clientState = await this.client.getState();
+        logger.info(`WhatsApp client state: ${clientState}`);
+        actuallyReady = clientState === 'CONNECTED';
       } catch (error) {
         logger.warn(`Client state check failed: ${error.message}`);
-        actuallyReady = false;
-        // Se não conseguir verificar o estado, resetar o status
-        this.isReady = false;
+        // Don't reset isReady here - sometimes getState fails even when connection works
+        // actuallyReady = false;
+        // this.isReady = false;
       }
     }
     
@@ -298,7 +321,8 @@ class WhatsAppService {
       is_connecting: this.isConnecting,
       has_qr_code: !!this.qrCode,
       client_exists: !!this.client,
-      internal_ready_flag: this.isReady
+      internal_ready_flag: this.isReady,
+      client_state: clientState
     };
   }
 

@@ -173,7 +173,7 @@ router.post('/disconnect', async (req, res) => {
 router.get('/qr', async (req, res) => {
   // Disable CSP for this specific endpoint
   res.removeHeader('Content-Security-Policy');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src 'self';");
   try {
     const status = await whatsAppService.getStatus();
     
@@ -253,8 +253,19 @@ router.get('/qr', async (req, res) => {
                 async function checkStatus() {
                     try {
                         const response = await fetch('/api/messages/status', {
-                            headers: { 'Authorization': 'Basic ' + btoa('admin:a1b2c3') }
+                            method: 'GET',
+                            credentials: 'same-origin',
+                            headers: { 
+                                'Authorization': 'Basic ' + btoa('admin:a1b2c3'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
                         });
+                        
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.status);
+                        }
+                        
                         const data = await response.json();
                         
                         if (data.data.is_ready) {
@@ -267,6 +278,9 @@ router.get('/qr', async (req, res) => {
                         }
                     } catch (error) {
                         console.error('Error checking status:', error);
+                        document.querySelector('.status').innerHTML = '❌ Erro ao verificar status: ' + error.message;
+                        document.querySelector('.status').style.backgroundColor = '#f8d7da';
+                        document.querySelector('.status').style.color = '#721c24';
                     }
                 }
                 
@@ -340,8 +354,18 @@ router.get('/qr', async (req, res) => {
                     try {
                         const response = await fetch('/api/messages/connect', {
                             method: 'POST',
-                            headers: { 'Authorization': 'Basic ' + btoa('admin:a1b2c3') }
+                            credentials: 'same-origin',
+                            headers: { 
+                                'Authorization': 'Basic ' + btoa('admin:a1b2c3'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
                         });
+                        
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.status);
+                        }
+                        
                         const data = await response.json();
                         
                         if (data.success) {

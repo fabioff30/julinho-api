@@ -171,6 +171,9 @@ router.post('/disconnect', async (req, res) => {
 
 // GET /api/messages/qr - Display QR Code in browser-friendly format
 router.get('/qr', async (req, res) => {
+  // Disable CSP for this specific endpoint
+  res.removeHeader('Content-Security-Policy');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline';");
   try {
     const status = await whatsAppService.getStatus();
     

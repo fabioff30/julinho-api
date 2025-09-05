@@ -96,7 +96,7 @@ router.post('/broadcast', async (req, res) => {
 // GET /api/messages/status - Get WhatsApp connection status
 router.get('/status', async (req, res) => {
   try {
-    const status = whatsAppService.getStatus();
+    const status = await whatsAppService.getStatus();
     const qrCode = whatsAppService.getQRCode();
     
     res.json({

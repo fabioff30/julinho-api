@@ -65,11 +65,26 @@ class WhatsAppService {
         this.isReady = true;
         this.isConnecting = false;
         this.qrCode = null;
-        logger.info('WhatsApp client is ready!');
+        logger.info('WhatsApp client is ready and authenticated!');
+        logger.info(`Client status: isReady=${this.isReady}, isConnecting=${this.isConnecting}`);
       });
 
       this.client.on('authenticated', () => {
         logger.info('WhatsApp client authenticated');
+      });
+
+      this.client.on('loading_screen', (percent, message) => {
+        logger.info(`WhatsApp loading: ${percent}% - ${message}`);
+      });
+
+      this.client.on('change_state', (state) => {
+        logger.info(`WhatsApp state changed: ${state}`);
+        if (state === 'CONNECTED') {
+          this.isReady = true;
+          this.isConnecting = false;
+          this.qrCode = null;
+          logger.info('WhatsApp is now connected and ready!');
+        }
       });
 
       this.client.on('auth_failure', (message) => {
@@ -166,7 +181,9 @@ class WhatsAppService {
   }
 
   async sendBroadcastMessage(message) {
-    if (!this.isReady) {
+    logger.info(`Checking WhatsApp status - isReady: ${this.isReady}, client exists: ${!!this.client}`);
+    
+    if (!this.isReady || !this.client) {
       throw new Error('WhatsApp client is not ready. Please connect first.');
     }
 
@@ -257,12 +274,31 @@ class WhatsAppService {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  getStatus() {
+  async getStatus() {
+    // Verificação mais robusta do status
+    let actuallyReady = this.isReady && !!this.client;
+    
+    // Se diz que está ready, verificar se realmente consegue acessar informações
+    if (actuallyReady && this.client) {
+      try {
+        // Tentar obter informações básicas do cliente
+        const clientInfo = await this.client.getState();
+        logger.info(`WhatsApp client state: ${clientInfo}`);
+        actuallyReady = clientInfo === 'CONNECTED';
+      } catch (error) {
+        logger.warn(`Client state check failed: ${error.message}`);
+        actuallyReady = false;
+        // Se não conseguir verificar o estado, resetar o status
+        this.isReady = false;
+      }
+    }
+    
     return {
-      is_ready: this.isReady,
+      is_ready: actuallyReady,
       is_connecting: this.isConnecting,
       has_qr_code: !!this.qrCode,
-      client_exists: !!this.client
+      client_exists: !!this.client,
+      internal_ready_flag: this.isReady
     };
   }
 

@@ -8,10 +8,19 @@ WORKDIR /app
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
 
-# Install system dependencies for potential native modules
+# Install system dependencies for potential native modules and Chromium for WhatsApp
 RUN apk add --no-cache \
     dumb-init \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
     && rm -rf /var/cache/apk/*
+
+# Tell Puppeteer to use installed Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
 # Copy package files
 COPY package*.json ./
@@ -23,9 +32,9 @@ RUN npm ci --only=production && \
 # Copy application source code
 COPY --chown=nodejs:nodejs . .
 
-# Create logs directory with proper permissions
-RUN mkdir -p logs && \
-    chown -R nodejs:nodejs logs
+# Create logs and whatsapp session directories with proper permissions
+RUN mkdir -p logs whatsapp-session && \
+    chown -R nodejs:nodejs logs whatsapp-session
 
 # Switch to non-root user
 USER nodejs

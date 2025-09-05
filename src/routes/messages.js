@@ -185,6 +185,17 @@ router.get('/qr', async (req, res) => {
         <head>
             <title>WhatsApp QR Code</title>
             <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+            <script>
+                // Fallback: if main library fails, try alternative
+                window.addEventListener('error', function(e) {
+                    if (e.filename && e.filename.includes('qrcode')) {
+                        console.log('Loading fallback QR library...');
+                        const fallback = document.createElement('script');
+                        fallback.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+                        document.head.appendChild(fallback);
+                    }
+                });
+            </script>
             <style>
                 body { 
                     font-family: Arial, sans-serif; 
@@ -240,14 +251,63 @@ router.get('/qr', async (req, res) => {
             
             <script>
                 // Generate QR Code
-                QRCode.toCanvas(document.getElementById('qrcode'), '${status.qr_code}', {
-                    width: 256,
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#FFFFFF'
+                console.log('QR Code data:', '${status.qr_code}');
+                
+                // Wait for QRCode library to load
+                function generateQRCode() {
+                    if (typeof QRCode === 'undefined') {
+                        console.log('QRCode library not loaded yet, retrying...');
+                        setTimeout(generateQRCode, 1000);
+                        return;
                     }
-                });
+                    
+                    try {
+                        console.log('Generating QR Code...');
+                        QRCode.toCanvas(document.getElementById('qrcode'), '${status.qr_code}', {
+                            width: 256,
+                            margin: 2,
+                            color: {
+                                dark: '#000000',
+                                light: '#FFFFFF'
+                            }
+                        }, function(error) {
+                            if (error) {
+                                console.error('QR Code generation error:', error);
+                                // Fallback: show text version
+                                document.getElementById('qrcode').innerHTML = \`
+                                    <div style="border: 2px solid #25D366; padding: 20px; margin: 10px 0; border-radius: 10px;">
+                                        <h3>❌ Erro ao gerar QR visual</h3>
+                                        <p><strong>Use este código no WhatsApp:</strong></p>
+                                        <textarea readonly style="width: 100%; height: 100px; font-family: monospace; font-size: 12px; word-break: break-all;">${status.qr_code}</textarea>
+                                        <p><small>Copie o código acima e use a opção "Pareamento por código" no WhatsApp</small></p>
+                                    </div>
+                                \`;
+                            } else {
+                                console.log('QR Code generated successfully');
+                            }
+                        });
+                    } catch (error) {
+                        console.error('QR Code library error:', error);
+                        // Ultimate fallback: use online QR service
+                        const qrData = encodeURIComponent('${status.qr_code}');
+                        document.getElementById('qrcode').innerHTML = \`
+                            <div style="border: 2px solid #25D366; padding: 20px; margin: 10px 0; border-radius: 10px;">
+                                <h3>🔄 QR Code (Fallback)</h3>
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=\${qrData}" 
+                                     alt="WhatsApp QR Code" 
+                                     style="max-width: 256px; border: 1px solid #ccc;"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div style="display: none;">
+                                    <p><strong>Código manual:</strong></p>
+                                    <textarea readonly style="width: 100%; height: 80px; font-family: monospace; font-size: 10px;">${status.qr_code}</textarea>
+                                </div>
+                            </div>
+                        \`;
+                    }
+                }
+                
+                // Start QR generation when page loads
+                generateQRCode();
                 
                 // Check connection status
                 async function checkStatus() {
